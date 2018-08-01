@@ -18,7 +18,7 @@ class Diff:
 
     def generate_html(self):
         diff = difflib.HtmlDiff().make_file(self.actual, self.typed)
-        f = open('diff.html', 'w')
+        f = open('templates/diff.html', 'w')
         f.write(diff)
         f.close()
         return diff
