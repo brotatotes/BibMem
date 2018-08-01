@@ -7,7 +7,7 @@ from wtforms.validators import DataRequired, Length, NumberRange
 
 class SelectVerseForm(FlaskForm):
     bible = Bible()
-    
+
     book_choices = []
     for book in bible.books():
         book_choices.append((book, bible.capitalize(book)))
@@ -25,7 +25,7 @@ class SelectVerseForm(FlaskForm):
     def validate(self):
         max_chapter = self.bible.num_chapters(self.book.data)
         self.chapter.validators = [NumberRange(min=1,max=max_chapter)]
-        if self.chapter.data <= max_chapter:
+        if self.chapter.data and self.chapter.data <= max_chapter:
             max_verse = self.bible.num_verses(self.book.data, self.chapter.data)
             self.verse.validators = [NumberRange(min=1,max=max_verse)]
         return super().validate()
