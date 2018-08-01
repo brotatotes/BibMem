@@ -6,21 +6,29 @@ from wtforms.validators import DataRequired, Length, NumberRange
 
 
 class SelectVerseForm(FlaskForm):
-    b = Bible()
-    book_choices = [(book, ' '.join(word.capitalize() for word in book.split())) for book in b.BOOKS]
+    bible = Bible()
+    
+    book_choices = []
+    for book in bible.books():
+        book_choices.append((book, bible.capitalize(book)))
     book = SelectField('Book', choices = book_choices)
     chapter = IntegerField('Chapter')
-    verse = IntegerField('Verse', validators = [NumberRange(min=1,max=999),])
-    version = SelectField('Version', choices = [("amp", "Amplified Bible (AMP)"), ("esv", "English Standard Version (ESV)"), ("niv", "New International Version (NIV)"), ("nkjv", "New King James Version (NKJV)")], default="esv")
+    verse = IntegerField('Verse')
+
+    version_choices = []
+    for version in bible.versions():
+        version_choices.append((version, bible.version_name(version)))
+    version = SelectField('Version', choices = version_choices, default="esv")
+
     submit = SubmitField('Start')
 
     def validate(self):
-        max_chapter = self.b.CHAPTERS[self.b.BOOKS.index(self.book.data)]
+        max_chapter = self.bible.num_chapters(self.book.data)
         self.chapter.validators = [NumberRange(min=1,max=max_chapter)]
-        if not super().validate():
-            return False
-        else:
-            return True
+        if self.chapter.data <= max_chapter:
+            max_verse = self.bible.num_verses(self.book.data, self.chapter.data)
+            self.verse.validators = [NumberRange(min=1,max=max_verse)]
+        return super().validate()
 
 class ReciteForm(FlaskForm):
     text = TextAreaField('', validators = [DataRequired(), Length(min=1)])
