@@ -17,8 +17,7 @@ def mem():
 
         d = Diff(actual, typed)
         html = d.generate_html()
-
-        return redirect(url_for('result', html=html)) # TODO
+        return html
     return render_template('mem.html', form=form, book=request.args.get("book"), chapter=request.args.get("chapter"), verse=request.args.get("verse"))
 
 @app.route('/')
@@ -35,10 +34,6 @@ def select_verse():
         return redirect(url_for('mem', book=book, chapter=chapter, verse=verse))
     else:
         return render_template('select-verse.html', form=form)
-
-@app.route('/result', methods=['GET', 'POST'])
-def result():
-    return request.args.get("html")
 
 if __name__ == '__main__':
     app.run(debug=True)
