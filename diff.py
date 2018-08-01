@@ -11,10 +11,10 @@ class Diff:
             self.set_typed(typed)
 
     def set_actual(self, actual):
-        self.actual = ''.join([c for c in actual if c not in exclude]).split()
+        self.actual = ''.join([c for c in actual if c not in self.exclude]).split()
 
     def set_typed(self, typed):
-        self.typed = ''.join([c for c in typed if c not in exclude]).split()
+        self.typed = ''.join([c for c in typed if c not in self.exclude]).split()
 
     def generate_html(self):
         diff = difflib.HtmlDiff().make_file(self.actual, self.typed)
