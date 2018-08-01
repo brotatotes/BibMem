@@ -28,7 +28,7 @@ def home():
 def select_verse():
     form = SelectVerseForm()
     if form.validate_on_submit():
-        book = ' '.join(word.capitalize() for word in form.book.data.split())
+        book = ' '.join(word.capitalize() for word in form.book.data.strip().split())
         chapter = form.chapter.data
         verse = form.verse.data
         return redirect(url_for('mem', book=book, chapter=chapter, verse=verse))
