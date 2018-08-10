@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 class Bible:
     ROOTLINK = "https://www.bible.com/bible/"
@@ -81,6 +81,8 @@ class Bible:
         ('revelation', [20, 29, 22, 11, 14, 17, 17, 13, 21, 11, 19, 17, 18, 20, 8, 21, 18, 24, 21, 15, 27, 21])
     ])
 
+    Verse = namedtuple('Verse', ['book', 'chapter', 'verse'])
+
     def capitalize(self, book):
         return ' '.join(word.capitalize() for word in book.split())
 
@@ -128,8 +130,10 @@ class Bible:
         link = self.ROOTLINK + self.version_code(version) + '/' + self.get_book_id(book) + '.' + str(chapter) + '.' + str(verse)
         html = requests.get(link).text
         soup = BeautifulSoup(html, 'html.parser')
-        verse = soup.title.text
-        return verse[verse.index(';') + 2:]
+        title = soup.title.text
+        return title[title.index(str(verse)) + 2 : title.index('|') - 1]
+
+
 
 
 
@@ -137,3 +141,4 @@ if __name__ == "__main__":
     b = Bible()
     print(b.get_verse("romans", 6, 5, "nkjv"))
     print(b.old_testament())
+    print(b.Verse('genesis', 1, 1))
