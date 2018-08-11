@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 
 class Bible:
     ROOTLINK = "https://www.bible.com/bible/"
@@ -81,7 +81,34 @@ class Bible:
         ('revelation', [20, 29, 22, 11, 14, 17, 17, 13, 21, 11, 19, 17, 18, 20, 8, 21, 18, 24, 21, 15, 27, 21])
     ])
 
-    Verse = namedtuple('Verse', ['book', 'chapter', 'verse'])
+    def verse_range(self, start = '', end = ''):
+        if not start:
+            start = Verse('genesis', 1, 1, '')
+        if not end:
+            end = Verse('revelation', 22, 21, '')
+
+        starting_verse = start.clone()
+        current_verse = start.clone()
+        ending_verse = end.clone()
+        stop_iteration = False
+
+        while not stop_iteration:
+            yield current_verse.clone()
+
+            if current_verse == ending_verse:
+                stop_iteration = True
+
+            if current_verse.verse < self.num_verses(current_verse.book, current_verse.chapter):
+                current_verse.verse += 1
+
+            elif current_verse.chapter < self.num_chapters(current_verse.book):
+                current_verse.chapter += 1
+                current_verse.verse = 1
+
+            else:
+                current_verse.book = self.next_book(current_verse.book)
+                current_verse.chapter = 1
+                current_verse.verse = 1
 
     def capitalize(self, book):
         return ' '.join(word.capitalize() for word in book.split())
@@ -107,6 +134,9 @@ class Bible:
         else:
             return self.VERSES[book][chapter - 1]
 
+    def next_book(self, book):
+        return self.books()[self.books().index(book) + 1]
+
     def versions(self):
         return self.VERSIONS.keys()
 
@@ -116,8 +146,8 @@ class Bible:
     def version_code(self, version):
         return self.VERSIONS[version][1]
 
-    def valid_verse(self, book, chapter, verse):
-        return self.is_book(book) and chapter <= self.num_chapters(book) and verse <= self.num_verses(book, chapter)
+    def valid_verse(self, verse):
+        return self.is_book(verse.book) and verse.chapter <= self.num_chapters(verse.book) and verse.verse <= self.num_verses(verse.book, verse.chapter)
 
     def get_book_id(self, book):
         if self.is_book(book):
@@ -127,18 +157,46 @@ class Bible:
 
     # Retrieves verse. Returns empty string upon failure.
     def get_verse(self, book, chapter, verse, version):
-        link = self.ROOTLINK + self.version_code(version) + '/' + self.get_book_id(book) + '.' + str(chapter) + '.' + str(verse)
+        return self._get_verse(Verse(book, chapter, verse, version))
+
+    def _get_verse(self, verse):
+        link = self.ROOTLINK + self.version_code(verse.version) + '/' + self.get_book_id(verse.book) + '.' + str(verse.chapter) + '.' + str(verse.verse)
         html = requests.get(link).text
         soup = BeautifulSoup(html, 'html.parser')
         title = soup.title.text
-        return title[title.index(str(verse)) + 2 : title.index('|') - 1]
+        return title[title.index(str(verse.verse)) + 2 : title.index('|') - 1]
 
+class Verse:
+    def __init__(self, book, chapter, verse, version = 'esv'):
+        self.book = book.lower().strip()
+        self.chapter = chapter
+        self.verse = verse
+        self.version = version.lower().strip()
 
+        if not self.version:
+            self.version = 'no version'
+
+    def __eq__(self, other):
+        if isinstance(other, Verse):
+            return self.book == other.book and self.chapter == other.chapter and self.verse == other.verse and self.version == other.version
+        return False
+
+    def __repr__(self):
+        return self.capitalize(self.book) + " " + str(self.chapter) + ":" + str(self.verse) + " (" + self.version.upper() + ")"
+
+    def capitalize(self, text):
+        return ' '.join(word.capitalize() for word in text.split())
+
+    def clone(self):
+        return Verse(self.book, self.chapter, self.verse, self.version)
 
 
 
 if __name__ == "__main__":
     b = Bible()
-    print(b.get_verse("romans", 6, 5, "nkjv"))
+    print(b.get_verse('romans', 6, 5, 'nkjv'))
     print(b.old_testament())
-    print(b.Verse('genesis', 1, 1))
+    print(Verse('genesis', 1, 1, 'esv') == Verse('genesis', 1, 1, 'esv'))
+
+    for verse in b.verse_range(Verse('genesis', 2, 2, ''), Verse('exodus', 1, 1, '')):
+        print(verse)
