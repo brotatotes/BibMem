@@ -164,7 +164,8 @@ class Bible:
         html = requests.get(link).text
         soup = BeautifulSoup(html, 'html.parser')
         title = soup.title.text
-        return title[title.index(str(verse.verse)) + 2 : title.index('|') - 1]
+        chapter_verse = str(verse.chapter) + ":" + str(verse.verse)
+        return title[title.index(chapter_verse) + len(chapter_verse) + 1 : title.index('|') - 1]
 
 class Verse:
     def __init__(self, book, chapter, verse, version = 'esv'):
