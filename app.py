@@ -22,10 +22,10 @@ def mem():
 
 @app.route('/')
 def home():
-    return redirect(url_for('select_verse'))
+    return redirect(url_for('select_verses'))
 
-@app.route('/select-verse', methods=['GET', 'POST'])
-def select_verse():
+@app.route('/select-verses', methods=['GET', 'POST'])
+def select_verses():
     form = SelectVerseForm()
     if form.validate_on_submit():
         book = ' '.join(word.capitalize() for word in form.book.data.strip().split())
@@ -33,7 +33,7 @@ def select_verse():
         verse = form.verse.data
         return redirect(url_for('mem', book=book, chapter=chapter, verse=verse))
     else:
-        return render_template('select-verse.html', form=form)
+        return render_template('select-verses.html', form=form)
 
 if __name__ == '__main__':
     app.run(debug=True)
